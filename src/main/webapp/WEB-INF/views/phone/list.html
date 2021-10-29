@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <title>List Smartphone</title>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <script type="text/javascript">
+
+
+        function addNewSmartPhone() {
+            let producer = $('#producer').val();
+            let model = $('#model').val();
+            let price = $('#price').val();
+            let newSmartphone = {
+                producer: producer,
+                model: model,
+                price: price
+            };
+            $.ajax({
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                type: "POST",
+                data: JSON.stringify(newSmartphone),
+                //tên API
+                url: "/smartphones",
+                success: successHandler
+
+            });
+            event.preventDefault();
+        }
+
+        //phan trang
+        let page = 0;
+        function nextPage(){
+            page++;
+            successHandler();
+        }
+
+        function previousPage() {
+            page--;
+            successHandler();
+        }
+
+        function searchSmartphone() {
+
+        }
+
+        function successHandler() {
+            $.ajax({
+                type: "GET",
+                //tên API
+                url: `/smartphones?page=${page}`,
+                //xử lý khi thành công
+                success: function (data) {
+                    // hien thi danh sach o day
+                    let content = '    <tr>\n' +
+                        '        <td>Producer</td>\n' +
+                        '        <td>Model</td>\n' +
+                        '        <td>Price</td>\n' +
+                        '        <td>Edit</td>\n' +
+                        '        <td>Delete</td>\n' +
+                        '        <td>View</td>\n' +
+                        '    </tr>';
+                    for (let i = 0; i < data.content.length; i++) {
+                        content += getSmartphone(data.content[i]);
+                    }
+                    document.getElementById('smartphoneList').innerHTML = content;
+                }
+            });
+        }
+
+        //function có tên là getSmartphone() để lấy ra thông tin của một đối tượng smartphone dưới dạng HTML
+        function getSmartphone(smartphone) {
+            return `<tr><td>${smartphone.producer}</td><td>${smartphone.model}</td><td >${smartphone.price}</td>` +
+                `<td><button onclick="editSmartphoneForm(${smartphone.id})">Edit</button></td>
+                <td><button onclick="deleteSmartphone(${smartphone.id})">Delete</button></td>
+                <td><button onclick="inforSmartphone(${smartphone.id})">View</button></td></tr>`;
+        }
+
+
+        function editSmartphone(id) {
+            let producer = $('#producer1').val();
+            let model = $('#model1').val();
+            let price = $('#price1').val();
+            let newSmartphone = {
+                producer: producer,
+                model: model,
+                price: price
+            };
+
+            $.ajax({
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                type: "PUT",
+                data: JSON.stringify(newSmartphone),
+                url: "/smartphones/" + id,
+                success: function (data) {
+                    successHandler();
+                }
+
+            })
+        }
+
+        function editSmartphoneForm(id) {
+            $.ajax({
+                url: "/smartphones/" + id,
+                type: "GET",
+                success: function (data) {
+                $("#edit-smartphone").html(
+                    `<table>
+                        <tr>
+                            <td>Producer:</td>
+                            <td><input type="text" value="data.producer" id="producer1" placeholder="producer"></td>
+                        </tr>
+                        <tr>
+                            <td>Model:</td>
+                            <td><input type="text" value="data.model" id="model1" placeholder="model"></td>
+                        </tr>
+                        <tr>
+                            <td>Price:</td>
+                            <td><input type="text" value="data.price" id="price1" placeholder="price"></td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td><input type="submit" value="Edit" onClick="editSmartphone(${data.id})"></td>
+                        </tr>
+                    </table>`
+                )}
+            })
+
+        }
+
+        function inforSmartphone(id) {
+            $.ajax({
+                url: "/smartphones/" + id,
+                type: "GET",
+                success: function (data) {
+                    alert("id = " + data.id + "producer = " + data.producer + "model = " + data.model + "price = " + data.price);
+                }
+            })
+        }
+
+        //Thêm đoạn script với nội dung như sau để gửi lệnh xóa
+
+        function deleteSmartphone(id) {
+            $.ajax({
+                url: "/smartphones/" + id,
+                type: "DELETE",
+                success: function (data) {
+                    successHandler();
+                }
+            })
+        }
+        successHandler();
+
+
+    </script>
+</head>
+<body>
+
+<h3>Create new Smartphone Form</h3>
+<form id="add-smartphone">
+    <table>
+        <tr>
+            <td>Producer:</td>
+            <td><input type="text" id="producer" placeholder="producer"></td>
+        </tr>
+        <tr>
+            <td>Model:</td>
+            <td><input type="text" id="model" placeholder="model"></td>
+        </tr>
+        <tr>
+            <td>Price:</td>
+            <td><input type="text" id="price" placeholder="price"></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td><input type="submit" value="Add" onclick="addNewSmartPhone()"></td>
+        </tr>
+    </table>
+</form>
+<form id="edit-smartphone"></form>
+
+<h1>Smartphone List</h1>
+<table id="smartphoneList"></table>
+<input type="submit" value="previous" onclick="previousPage()"><input type="submit" value="next" onclick="nextPage()">
+
+</body>
+</html>
